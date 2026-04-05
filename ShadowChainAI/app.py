@@ -1,7 +1,8 @@
 import gradio as gr
+import subprocess
 from fastapi import FastAPI
 from pydantic import BaseModel
-import subprocess
+import uvicorn
 
 from environment import SecurityEnv
 
@@ -9,18 +10,18 @@ from environment import SecurityEnv
 env = SecurityEnv()
 app = FastAPI()
 
-# -------- API MODELS --------
+# -------- MODELS --------
 class ActionRequest(BaseModel):
     action: str
 
-# -------- API ENDPOINTS --------
+# -------- API --------
 @app.post("/reset")
-def reset():
+async def reset():
     state = env.reset()
     return {"state": state}
 
 @app.post("/step")
-def step(req: ActionRequest):
+async def step(req: ActionRequest):
     state, reward, done, info = env.step(req.action)
     return {
         "state": state,
@@ -29,7 +30,7 @@ def step(req: ActionRequest):
         "info": info
     }
 
-# -------- GRADIO FUNCTION --------
+# -------- GRADIO --------
 def run_env():
     result = subprocess.run(
         ["python", "inference.py"],
@@ -38,20 +39,23 @@ def run_env():
     )
     return result.stdout
 
-# -------- GRADIO UI --------
 demo = gr.Interface(
     fn=run_env,
     inputs=[],
     outputs="text",
     title="ShadowChain AI Environment",
-    description="Runs insider threat simulation and exposes OpenEnv API."
+    description="Runs insider threat simulation and exposes API."
 )
 
-# -------- RUN BOTH --------
-@app.get("/")
-def root():
-    return {"message": "ShadowChain AI API running"}
-
-# Launch Gradio separately
+# -------- MAIN --------
 if __name__ == "__main__":
-    demo.launch()
+    import threading
+
+    # Run FastAPI in background
+    def run_api():
+        uvicorn.run(app, host="0.0.0.0", port=7861)
+
+    threading.Thread(target=run_api).start()
+
+    # Run Gradio UI
+    demo.launch(server_name="0.0.0.0", server_port=7860)
