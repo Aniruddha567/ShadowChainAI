@@ -1,0 +1,15 @@
+[project]
+name = "shadowchain-ai-env"
+version = "0.1.0"
+description = "OpenEnv environment for insider threat detection"
+requires-python = ">=3.10"
+
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "gradio",
+    "pydantic"
+]
+
+[tool.setuptools]
+packages = ["."]
