@@ -28,17 +28,7 @@ def step(req: ActionRequest):
         "info": info
     }
 
-# -------- ROOT (OPTIONAL) --------
+# -------- ROOT --------
 @app.get("/")
 def root():
     return {"message": "ShadowChain AI Environment Running"}
-
-# -------- OPTIONAL DEBUG --------
-@app.get("/run")
-def run_env():
-    result = subprocess.run(
-        ["python", "inference.py"],
-        capture_output=True,
-        text=True
-    )
-    return {"output": result.stdout}
