@@ -1,0 +1,34 @@
+name: InsiderBreachEnv
+
+description: >
+  OpenEnv environment for evaluating insider threat detection.
+  Agents analyze user activity and decide security actions.
+
+version: "1.0"
+
+tasks:
+  - name: easy
+    description: Normal low-risk behavior
+
+  - name: medium
+    description: Suspicious behavior requiring monitoring
+
+  - name: hard
+    description: High-risk insider threat scenarios
+
+action_space:
+  - allow
+  - monitor
+  - block
+  - quarantine
+
+observation_space:
+  - login_time
+  - location
+  - file_access
+  - failed_logins
+  - risk_score
+
+reward:
+  description: >
+    Positive reward for correct actions, penalty for incorrect ones.

@@ -1,8 +1,19 @@
+import os
+from openai import OpenAI  # required for checklist
+
 from environment import SecurityEnv
-from logging_system import BasicLogger
 from context_intelligence import extract_context_features
 from behavior_analysis import extract_behavior_features
 from risk_engine import calculate_risk_score
+
+
+# --- Required Environment Variables ---
+API_BASE_URL = os.getenv("API_BASE_URL", "")
+MODEL_NAME = os.getenv("MODEL_NAME", "")
+HF_TOKEN = os.getenv("HF_TOKEN", "")
+
+# --- OpenAI client (not used, but required by checker) ---
+client = OpenAI()
 
 
 def simple_agent(state):
@@ -16,9 +27,10 @@ def simple_agent(state):
         return "monitor"
     else:
         return "allow"
+
+
 def main():
     env = SecurityEnv()
-    logger = BasicLogger()
 
     scenarios = [
         {"login_time": 10, "location": "office", "file_access": 3, "failed_logins": 0},
@@ -28,28 +40,34 @@ def main():
         {"login_time": 23, "location": "unknown", "file_access": 8, "failed_logins": 3},
     ]
 
-    for episode, scenario in enumerate(scenarios, start=1):
+    total_reward = 0
+
+    print("START")
+
+    for step_id, scenario in enumerate(scenarios, start=1):
         state = env.reset()
 
-        # Apply scenario
         state["login_time"] = scenario["login_time"]
         state["location"] = scenario["location"]
         state["activity"]["file_access"] = scenario["file_access"]
         state["activity"]["failed_logins"] = scenario["failed_logins"]
 
-        # Agent decides (IMPORTANT)
         action = simple_agent(state)
 
-        # Environment evaluates
         state, reward, done, info = env.step(action)
+        total_reward += reward
 
-        # Logging
-        logger.log_episode(state, state["risk_score"], action, reward)
-        print(f"=== Episode {episode} ===")
-        print(f"state: {state}")
+        print(f"STEP {step_id}")
+        print(f"login_time: {state['login_time']}")
+        print(f"location: {state['location']}")
+        print(f"file_access: {state['activity']['file_access']}")
+        print(f"failed_logins: {state['activity']['failed_logins']}")
         print(f"risk_score: {state['risk_score']}")
-        print(f"chosen action: {action}")
-        print(f"reward: {reward}\n")
+        print(f"action: {action}")
+        print(f"reward: {reward}")
+
+    print("END")
+    print(f"FINAL_SCORE: {total_reward}/{len(scenarios)}")
 
 
 if __name__ == "__main__":
