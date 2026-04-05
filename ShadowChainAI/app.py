@@ -7,20 +7,20 @@ from environment import SecurityEnv
 
 # -------- INIT --------
 env = SecurityEnv()
+
+# -------- API (using gradio's built-in FastAPI) --------
 app = FastAPI()
 
-# -------- MODELS --------
 class ActionRequest(BaseModel):
     action: str
 
-# -------- API --------
 @app.post("/reset")
-async def reset():
+def reset():
     state = env.reset()
     return {"state": state}
 
 @app.post("/step")
-async def step(req: ActionRequest):
+def step(req: ActionRequest):
     state, reward, done, info = env.step(req.action)
     return {
         "state": state,
@@ -44,8 +44,8 @@ demo = gr.Interface(
     inputs=[],
     outputs="text",
     title="ShadowChain AI Environment",
-    description="Runs insider threat simulation and exposes OpenEnv API."
+    description="Runs insider threat simulation"
 )
 
-# -------- MOUNT UI --------
+# -------- IMPORTANT LINE --------
 app = gr.mount_gradio_app(app, demo, path="/")
