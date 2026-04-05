@@ -1,13 +1,13 @@
 import gradio as gr
-import subprocess
 from fastapi import FastAPI
 from pydantic import BaseModel
+import subprocess
 
 from environment import SecurityEnv
 
-# Create FastAPI app
-app = FastAPI()
+# -------- INIT --------
 env = SecurityEnv()
+app = FastAPI()
 
 # -------- API MODELS --------
 class ActionRequest(BaseModel):
@@ -29,7 +29,7 @@ def step(req: ActionRequest):
         "info": info
     }
 
-# -------- GRADIO UI --------
+# -------- GRADIO FUNCTION --------
 def run_env():
     result = subprocess.run(
         ["python", "inference.py"],
@@ -38,6 +38,7 @@ def run_env():
     )
     return result.stdout
 
+# -------- GRADIO UI --------
 demo = gr.Interface(
     fn=run_env,
     inputs=[],
@@ -46,5 +47,11 @@ demo = gr.Interface(
     description="Runs insider threat simulation and exposes OpenEnv API."
 )
 
-# Mount Gradio inside FastAPI
-app = gr.mount_gradio_app(app, demo, path="/")
+# -------- RUN BOTH --------
+@app.get("/")
+def root():
+    return {"message": "ShadowChain AI API running"}
+
+# Launch Gradio separately
+if __name__ == "__main__":
+    demo.launch()
